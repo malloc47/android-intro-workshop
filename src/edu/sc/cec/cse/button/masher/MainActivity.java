@@ -6,6 +6,7 @@ import android.os.Handler.Callback;
 import android.os.Message;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.SharedPreferences;
 import android.view.Menu;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -18,13 +19,17 @@ import java.util.TimerTask;
 
 public class MainActivity extends Activity {
 
+	public static final String SETTINGS = "ButtonMasher";
+	
 	Random rnd;
 	TextView timerView;
 	TextView clicksView;
+	TextView highScoreView;
 	Timer timer = new Timer();
 	boolean go=false;
 	float time=0;
 	int clicks=0;
+	int highScore=0;
 
     class timerTask extends TimerTask {
         @Override
@@ -52,6 +57,22 @@ public class MainActivity extends Activity {
         rnd = new Random();
         timerView = (TextView) findViewById(R.id.timerView);
         clicksView = (TextView) findViewById(R.id.clicksView);
+        highScoreView = (TextView) findViewById(R.id.highScore);
+        
+        SharedPreferences settings = getSharedPreferences(SETTINGS,0);
+        highScore = settings.getInt("highScore", 0);
+        
+		highScoreView.setText(String.format("HS: %d",highScore));
+    }
+    
+    @Override
+    public void onStop() {
+    	super.onStop();
+    	stopTimer();
+    	SharedPreferences settings = getSharedPreferences(SETTINGS,0);
+    	SharedPreferences.Editor editor = settings.edit();
+    	editor.putInt("highScore", highScore);
+    	editor.commit();
     }
 
     @Override
@@ -88,6 +109,10 @@ public class MainActivity extends Activity {
         alertDialog.setTitle("Finished");
         alertDialog.setMessage("You managed "+String.valueOf(clicks)+" clicks");
         alertDialog.show();
+        if(clicks > highScore) {
+        	highScore = clicks;
+    		highScoreView.setText(String.format("HS: %d",highScore));
+        }
     	go=false;
 		timer.cancel();
         timer.purge();
